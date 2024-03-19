@@ -1,5 +1,13 @@
 # Hand Duel API
 
+## Technologies
+
+Node.Js
+Typescript
+Fastify
+Prisma
+PostgreSQL
+
 ## Functional Requirements
 
 - [ ] The system should allow users to register a new account;
