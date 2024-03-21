@@ -10,9 +10,9 @@ PostgreSQL
 
 ## Functional Requirements
 
-- [ ] The system should allow users to register a new account;
-- [ ] Users should be able to authenticate using their credentials;
-- [ ] It should provide functionality to get the authenticated user's profile;
+- [x] The system should allow users to register a new account;
+- [x] Users should be able to authenticate using their credentials;
+- [x] It should provide functionality to get the authenticated user's profile;
 - [ ] Users should be able to create a new game session;
 - [ ] The system should display a list of games associated with the user;
 - [ ] Users should be able to join game sessions created by other users;

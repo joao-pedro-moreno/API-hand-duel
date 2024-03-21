@@ -93,3 +93,16 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
     throw err
   }
 }
+
+export async function profile(request: FastifyRequest, reply: FastifyReply) {
+  const userService = new UserService()
+
+  const user = await userService.findById(request.user.sub)
+
+  return reply.status(200).send({
+    user: {
+      ...user,
+      password_hash: undefined
+    }
+  })
+}
