@@ -1,8 +1,9 @@
 import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error"
+import { InvalidCredentialsError } from "@/errors/invalid-credentials-error"
 import { UsernameAlreadyExistsError } from "@/errors/username-already-exists-error"
 import { prisma } from "@/lib/prisma"
 import { User } from "@prisma/client"
-import { hash } from "bcryptjs"
+import { compare, hash } from "bcryptjs"
 
 interface RegisterUserRequest {
   username: string
@@ -10,8 +11,13 @@ interface RegisterUserRequest {
   password: string
 }
 
-interface RegisterUserReply {
+interface UserReply {
   user: User
+}
+
+interface AuthenticateUserRequest {
+  email: string
+  password: string
 }
 
 export class UserService {
@@ -19,7 +25,7 @@ export class UserService {
     username,
     email,
     password
-  }: RegisterUserRequest): Promise<RegisterUserReply> {
+  }: RegisterUserRequest): Promise<UserReply> {
     const password_hash = await hash(password, 6)
 
     const userWithSameEmail = await this.findByEmail(email)
@@ -41,6 +47,26 @@ export class UserService {
         password_hash
       }
     })
+
+    return { user }
+  }
+
+  async authenticate({ email, password }: AuthenticateUserRequest): Promise<UserReply> {
+    const user = await prisma.user.findUnique({
+      where: {
+        email
+      }
+    })
+
+    if (!user) {
+      throw new InvalidCredentialsError()
+    }
+
+    const doesPasswordMatches = await compare(password, user.password_hash)
+
+    if (!doesPasswordMatches) {
+      throw new InvalidCredentialsError()
+    }
 
     return { user }
   }
