@@ -2,6 +2,7 @@ import { SessionCodeAlreadyExistsError } from "@/errors/session-code-already-exi
 import { SessionIsFullError } from "@/errors/session-is-full-error";
 import { SessionNotFoundError } from "@/errors/session-not-found-error";
 import { UserAlreadyInSessionError } from "@/errors/user-already-in-session";
+import { UserNotFoundError } from "@/errors/user-not-found-error";
 import { SessionService } from "@/services/session-service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
@@ -66,7 +67,27 @@ export async function listActiveSessions(request: FastifyRequest, reply: Fastify
 
   const sessions = await sessionService.listActiveSessions()
 
-  console.log(sessions)
-
   return reply.status(200).send({ sessions })
+}
+
+export async function getSessionByOwnerUsername(request: FastifyRequest, reply: FastifyReply) {
+  const getSessionByOwnerUsernameBodySchema = z.object({
+    username: z.string(),
+  })
+
+  const { username } = getSessionByOwnerUsernameBodySchema.parse(request.body)
+
+  try {
+    const sessionService = new SessionService()
+
+    const session = await sessionService.findByOwnerUsername({ username })
+
+    return reply.status(200).send({ session })
+  } catch (err) {
+    if (err instanceof UserNotFoundError || err instanceof SessionNotFoundError) {
+      return reply.status(404).send({ message: err.message })
+    }
+
+    throw err
+  }
 }

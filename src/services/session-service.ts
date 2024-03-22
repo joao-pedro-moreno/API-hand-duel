@@ -2,6 +2,7 @@ import { SessionCodeAlreadyExistsError } from "@/errors/session-code-already-exi
 import { SessionIsFullError } from "@/errors/session-is-full-error"
 import { SessionNotFoundError } from "@/errors/session-not-found-error"
 import { UserAlreadyInSessionError } from "@/errors/user-already-in-session"
+import { UserNotFoundError } from "@/errors/user-not-found-error"
 import { prisma } from "@/lib/prisma"
 import { ActiveSession } from "@prisma/client"
 
@@ -18,6 +19,10 @@ interface ActiveSessionResponse {
 interface JoinSessionRequest {
   code: string
   userId: string
+}
+
+interface SearchSessionRequest {
+  username: string
 }
 
 export class SessionService {
@@ -106,5 +111,31 @@ export class SessionService {
     const sessions = await prisma.activeSession.findMany()
 
     return sessions
+  }
+
+  async findByOwnerUsername({ username }: SearchSessionRequest): Promise<ActiveSession | null> {
+    const user = await prisma.user.findUnique({
+      where: {
+        username
+      }
+    })
+
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    const userSession = await prisma.activeSession.findFirstOrThrow({
+      where: {
+        OR: [
+          { player1Id: user.id },
+        ]
+      }
+    })
+
+    if (!userSession) {
+      throw new SessionNotFoundError()
+    }
+
+    return userSession
   }
 }
