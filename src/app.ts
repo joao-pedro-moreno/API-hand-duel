@@ -4,7 +4,6 @@ import { env } from "./env"
 import { routes } from "./controllers/routes"
 import fastifyJwt from "@fastify/jwt"
 import fastifyCookie from "@fastify/cookie"
-import fastifyWebsocket from "@fastify/websocket"
 
 export const app = fastify()
 
@@ -20,7 +19,6 @@ app.register(fastifyJwt, {
 })
 
 app.register(fastifyCookie)
-app.register(fastifyWebsocket)
 
 app.register(routes)
 

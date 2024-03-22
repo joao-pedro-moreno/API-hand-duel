@@ -1,4 +1,6 @@
 import { SessionCodeAlreadyExistsError } from "@/errors/session-code-already-exists-error"
+import { SessionIsFullError } from "@/errors/session-is-full-error"
+import { SessionNotFoundError } from "@/errors/session-not-found-error"
 import { UserAlreadyInSessionError } from "@/errors/user-already-in-session"
 import { prisma } from "@/lib/prisma"
 import { ActiveSession } from "@prisma/client"
@@ -11,6 +13,11 @@ interface CreateSessionRequest {
 
 interface ActiveSessionResponse {
   session: ActiveSession
+}
+
+interface JoinSessionRequest {
+  code: string
+  userId: string
 }
 
 export class SessionService {
@@ -48,6 +55,48 @@ export class SessionService {
         player1Id: userId,
         rounds
       }
+    })
+
+    return { session }
+  }
+
+  async join({ code, userId }: JoinSessionRequest): Promise<ActiveSessionResponse> {
+    const requestedSession = await prisma.activeSession.findUnique({
+      where: {
+        code
+      }
+    })
+
+    if (!requestedSession) {
+      throw new SessionNotFoundError()
+    }
+
+    const sessionsWithTheSamePlayer = await prisma.activeSession.findMany({
+      where: {
+        OR: [
+          {
+            player1Id: userId,
+          },
+          {
+            player2Id: userId
+          }
+        ]
+      }
+    })
+
+    if (sessionsWithTheSamePlayer.length > 0) {
+      throw new UserAlreadyInSessionError()
+    }
+
+    const sessionAlreadyHasPlayer2 = requestedSession.player2Id
+
+    if (sessionAlreadyHasPlayer2) {
+      throw new SessionIsFullError()
+    }
+
+    const session = await prisma.activeSession.update({
+      where: { code },
+      data: { player2Id: userId }
     })
 
     return { session }
