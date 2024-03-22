@@ -60,3 +60,13 @@ export async function joinSession(request: FastifyRequest, reply: FastifyReply) 
     throw err
   }
 }
+
+export async function listActiveSessions(request: FastifyRequest, reply: FastifyReply) {
+  const sessionService = new SessionService()
+
+  const sessions = await sessionService.listActiveSessions()
+
+  console.log(sessions)
+
+  return reply.status(200).send({ sessions })
+}

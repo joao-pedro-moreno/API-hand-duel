@@ -101,4 +101,10 @@ export class SessionService {
 
     return { session }
   }
+
+  async listActiveSessions(): Promise<ActiveSession[] | null> {
+    const sessions = await prisma.activeSession.findMany()
+
+    return sessions
+  }
 }
