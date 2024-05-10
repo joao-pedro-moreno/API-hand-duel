@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  hand-duel:
+    image: bitnami/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_USERNAME=hand-duel
+      - POSTGRESQL_PASSWORD=handduel2024
+      - POSTGRESQL_DATABASE=hand-duel

@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  PLAYER1
+  PLAYER2
+  TIE
+}
+
+model User {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+
+  @@map("users")
+}
+
+model ActiveSession {
+  id        String  @id @default(uuid())
+  code      String  @unique
+  rounds    Int     @default(5)
+  player1Id String
+  player2Id String?
+
+  @@map("active_sessions")
+}
+
+model FinishedSession {
+  id          String        @id
+  rounds      Int
+  player1Id   String
+  player2Id   String
+  status      SessionStatus
+  finished_at DateTime      @default(now())
+
+  @@map("finished_sessions")
+}
