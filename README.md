@@ -37,3 +37,53 @@ PostgreSQL
 - [x] Users cannot register a new account with a duplicated email address;
 - [x] Users cannot participate in more than one game session simultaneously;
 - [ ] Game sessions will be automatically closed after 10 minutes of inactivity;
+
+## Install
+
+1. Clone the repository:
+
+    ```shell
+    git clone https://github.com/joao-pedro-moreno/API-hand-duel.git
+    ```
+
+2. Enter the project directory:
+
+    ```shell
+    cd API-hand-duel
+    ```
+
+3. Install the dependencies:
+
+    ```shell
+    npm install
+    # or
+    yarn install
+    ```
+
+4. Clone the ``.env`` file:
+
+    ```shell
+    cp .env.example .env
+    ```
+
+5. Configure Prisma ORM:
+
+    ```shell
+    npx prisma generate
+
+    npx prisma migrate dev
+    ```
+
+6. Create and start database with docker:
+
+    ```shell
+    docker-compose up
+    ```
+
+7. Run the server:
+
+    ```shell
+    npm run start:dev
+    ```
+
+The API will be available on <http://localhost:3333>
