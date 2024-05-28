@@ -2,11 +2,11 @@
 
 ## Technologies
 
-Node.Js
-Typescript
-Fastify
-Prisma
-PostgreSQL
+- Node.Js
+- Typescript
+- Fastify
+- Prisma
+- PostgreSQL
 
 ## Functional Requirements
 
