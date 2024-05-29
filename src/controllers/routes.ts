@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { authenticate, profile, registerUser } from "./user-controllers";
+import { authenticate, profile, registerUser } from "./UserController";
 import { verifyJWT } from "@/middlewares/verify-jwt";
 import { createSession, getSessionByOwnerUsername, joinSession, listActiveSessions } from "./sessions-controllers";
 
