@@ -64,20 +64,21 @@
 
     ```shell
     cp .env.example .env
+  
     ```
 
-5. Configure Prisma ORM:
+5. Create and start database with docker:
+
+    ```shell
+    docker compose up
+    ```
+
+6. Configure Prisma ORM:
 
     ```shell
     npx prisma generate
 
     npx prisma migrate dev
-    ```
-
-6. Create and start database with docker:
-
-    ```shell
-    docker-compose up
     ```
 
 7. Run the server:

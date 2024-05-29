@@ -1,11 +1,11 @@
 import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error";
 import { InvalidCredentialsError } from "@/errors/invalid-credentials-error";
 import { UsernameAlreadyExistsError } from "@/errors/username-already-exists-error";
-import { UserService } from "@/services/user-services";
+import { UserService } from "@/services/UserService";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-export async function register(request: FastifyRequest, reply: FastifyReply) {
+export async function registerUser(request: FastifyRequest, reply: FastifyReply) {
   const registerBodySchema = z.object({
     username: z.string(),
     email: z.string().email(),
@@ -17,7 +17,7 @@ export async function register(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userService = new UserService()
 
-    const { user } = await userService.register({ username, email, password })
+    const { user } = await userService.registerUser({ username, email, password })
 
     const token = await reply.jwtSign({}, {
       sign: {
