@@ -1,20 +1,15 @@
+import { BadRequestError } from "@/errors/bad-request-error";
 import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error";
 import { InvalidCredentialsError } from "@/errors/invalid-credentials-error";
 import { UsernameAlreadyExistsError } from "@/errors/username-already-exists-error";
 import { UserService } from "@/services/UserService";
+import { UserValidator } from "@/validators/UserValidator";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
 
 export async function registerUser(request: FastifyRequest, reply: FastifyReply) {
-  const registerBodySchema = z.object({
-    username: z.string(),
-    email: z.string().email(),
-    password: z.string().min(6),
-  })
-
-  const { username, email, password } = registerBodySchema.parse(request.body)
-
   try {
+    const { username, email, password } = new UserValidator().validateRegisterRequest(request)
+
     const userService = new UserService()
 
     const { user } = await userService.registerUser({ username, email, password })
@@ -47,19 +42,18 @@ export async function registerUser(request: FastifyRequest, reply: FastifyReply)
       return reply.status(409).send({ message: err.message })
     }
 
+    if (err instanceof BadRequestError) {
+      return reply.status(400).send({ message: err.message })
+    }
+
     throw err
   }
 }
 
-export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
-  const authenticateBodySchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
-  })
-
-  const { email, password } = authenticateBodySchema.parse(request.body)
-
+export async function authenticateUser(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { email, password } = new UserValidator().validateAuthenticacteRequest(request)
+
     const userService = new UserService()
 
     const { user } = await userService.authenticate({ email, password })

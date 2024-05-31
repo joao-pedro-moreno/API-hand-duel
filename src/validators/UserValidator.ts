@@ -8,6 +8,11 @@ interface RegisterRequest {
   password: string
 }
 
+interface AuthenticateRequest {
+  email: string
+  password: string
+}
+
 export class UserValidator {
   validateRegisterRequest(request: FastifyRequest): RegisterRequest {
     try {
@@ -18,6 +23,21 @@ export class UserValidator {
       })
 
       const requestBody = registerBodySchema.parse(request.body)
+
+      return requestBody
+    } catch (err) {
+      throw new BadRequestError()
+    }
+  }
+
+  validateAuthenticacteRequest(request: FastifyRequest): AuthenticateRequest {
+    try {
+      const authenticateBodySchema = z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+      })
+
+      const requestBody = authenticateBodySchema.parse(request.body)
 
       return requestBody
     } catch (err) {
