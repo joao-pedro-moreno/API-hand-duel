@@ -1,7 +1,8 @@
-import { BadRequestError } from "@/errors/bad-request-error";
-import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error";
-import { InvalidCredentialsError } from "@/errors/invalid-credentials-error";
-import { UsernameAlreadyExistsError } from "@/errors/username-already-exists-error";
+import { BadRequestError } from "@/errors/BadRequestError";
+import { EmailAlreadyExistsError } from "@/errors/EmailAlreadyExistsError";
+import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError";
+import { UserNotFoundError } from "@/errors/UserNotFoundError";
+import { UsernameAlreadyExistsError } from "@/errors/UsernameAlreadyExistsError";
 import { UserService } from "@/services/UserService";
 import { UserValidator } from "@/validators/UserValidator";
 import { FastifyReply, FastifyRequest } from "fastify";
@@ -56,7 +57,7 @@ export async function authenticateUser(request: FastifyRequest, reply: FastifyRe
 
     const userService = new UserService()
 
-    const { user } = await userService.authenticate({ email, password })
+    const { user } = await userService.authenticateUser({ email, password })
 
     const token = await reply.jwtSign({}, {
       sign: {
@@ -84,19 +85,28 @@ export async function authenticateUser(request: FastifyRequest, reply: FastifyRe
     if (err instanceof InvalidCredentialsError) {
       return reply.status(401).send({ message: err.message })
     }
+
     throw err
   }
 }
 
-export async function profile(request: FastifyRequest, reply: FastifyReply) {
-  const userService = new UserService()
+export async function getUserProfile(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userService = new UserService()
 
-  const user = await userService.findById(request.user.sub)
+    const user = await userService.getUserProfile(request.user.sub)
 
-  return reply.status(200).send({
-    user: {
-      ...user,
-      password_hash: undefined
+    return reply.status(200).send({
+      user: {
+        ...user,
+        password_hash: undefined
+      }
+    })
+  } catch (err) {
+    if (err instanceof UserNotFoundError) {
+      return reply.status(404).send({ message: err.message })
     }
-  })
+
+    throw err
+  }
 }

@@ -1,8 +1,8 @@
-import { SessionCodeAlreadyExistsError } from "@/errors/session-code-already-exists-error"
-import { SessionIsFullError } from "@/errors/session-is-full-error"
-import { SessionNotFoundError } from "@/errors/session-not-found-error"
-import { UserAlreadyInSessionError } from "@/errors/user-already-in-session"
-import { UserNotFoundError } from "@/errors/user-not-found-error"
+import { SessionCodeAlreadyExistsError } from "@/errors/SessionCodeAlreadyExistsError"
+import { SessionIsFullError } from "@/errors/SessionIsFullError"
+import { SessionNotFoundError } from "@/errors/SessionNotFoundError"
+import { UserAlreadyInSessionError } from "@/errors/UserAlreadyInSessionError"
+import { UserNotFoundError } from "@/errors/UserNotFoundError"
 import { prisma } from "@/lib/prisma"
 import { ActiveSession } from "@prisma/client"
 

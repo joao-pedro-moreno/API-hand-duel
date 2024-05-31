@@ -1,7 +1,8 @@
 import { UserDao } from "@/daos/UserDao"
-import { EmailAlreadyExistsError } from "@/errors/email-already-exists-error"
-import { InvalidCredentialsError } from "@/errors/invalid-credentials-error"
-import { UsernameAlreadyExistsError } from "@/errors/username-already-exists-error"
+import { EmailAlreadyExistsError } from "@/errors/EmailAlreadyExistsError"
+import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError"
+import { UserNotFoundError } from "@/errors/UserNotFoundError"
+import { UsernameAlreadyExistsError } from "@/errors/UsernameAlreadyExistsError"
 import { User } from "@prisma/client"
 import { compare, hash } from "bcryptjs"
 
@@ -48,7 +49,7 @@ export class UserService {
     return user
   }
 
-  async authenticate({ email, password }: AuthenticateUserRequest): Promise<UserReply> {
+  async authenticateUser({ email, password }: AuthenticateUserRequest): Promise<UserReply> {
     const user = await this.userDao.findUserByEmail(email)
 
     if (!user) {
@@ -62,5 +63,15 @@ export class UserService {
     }
 
     return { user }
+  }
+
+  async getUserProfile(id: string): Promise<User> {
+    const user = await this.userDao.findUserById(id)
+
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    return user
   }
 }

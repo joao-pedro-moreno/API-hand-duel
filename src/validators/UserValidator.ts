@@ -1,4 +1,4 @@
-import { BadRequestError } from "@/errors/bad-request-error"
+import { BadRequestError } from "@/errors/BadRequestError"
 import { FastifyRequest } from "fastify"
 import { z } from "zod"
 
@@ -43,5 +43,23 @@ export class UserValidator {
     } catch (err) {
       throw new BadRequestError()
     }
+  }
+
+  validateUsername(request?: FastifyRequest, username?: string): string {
+    let validatedUsername = ""
+
+    const usernameSchema = z.object({
+      username: z.string()
+    })
+
+    if (request) {
+      validatedUsername = usernameSchema.parse(request.body)["username"]
+    }
+
+    if (username) {
+      validatedUsername = usernameSchema.parse(username)["username"]
+    }
+
+    return validatedUsername
   }
 }
