@@ -45,4 +45,14 @@ export class SessionValidator {
       throw new InvalidCodeFormatError()
     }
   }
+
+  validateSocketCode(request: FastifyRequest): string {
+    const codeFormatSchema = z.object({
+      code: z.string().length(6)
+    })
+
+    const validatedCode = codeFormatSchema.parse(request.query)["code"]
+
+    return validatedCode
+  }
 }
