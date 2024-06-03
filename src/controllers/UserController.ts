@@ -1,4 +1,5 @@
 import { BadRequestError } from "@/errors/BadRequestError";
+import { CannotDeleteAccount } from "@/errors/CannotDeleteAccount";
 import { EmailAlreadyExistsError } from "@/errors/EmailAlreadyExistsError";
 import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError";
 import { UserNotFoundError } from "@/errors/UserNotFoundError";
@@ -105,6 +106,20 @@ export async function getUserProfile(request: FastifyRequest, reply: FastifyRepl
   } catch (err) {
     if (err instanceof UserNotFoundError) {
       return reply.status(404).send({ message: err.message })
+    }
+
+    throw err
+  }
+}
+
+export async function deleteUser(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    new UserService().deleteUser(request.user.sub)
+
+    return reply.status(204).send()
+  } catch (err) {
+    if (err instanceof CannotDeleteAccount) {
+      return reply.status(403).send({ message: err.message })
     }
 
     throw err
