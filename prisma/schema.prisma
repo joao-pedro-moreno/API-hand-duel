@@ -11,6 +11,7 @@ enum SessionStatus {
   PLAYER1
   PLAYER2
   TIE
+  INTERRUPTED
 }
 
 model User {

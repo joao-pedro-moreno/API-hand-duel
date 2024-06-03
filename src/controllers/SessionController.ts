@@ -1,26 +1,23 @@
-import { SessionCodeAlreadyExistsError } from "@/errors/session-code-already-exists-error";
-import { SessionIsFullError } from "@/errors/session-is-full-error";
-import { SessionNotFoundError } from "@/errors/session-not-found-error";
-import { UserAlreadyInSessionError } from "@/errors/user-already-in-session";
-import { UserNotFoundError } from "@/errors/user-not-found-error";
-import { SessionService } from "@/services/session-service";
+import { InvalidCodeFormatError } from "@/errors/InvalidCodeFormatError";
+import { SessionCodeAlreadyExistsError } from "@/errors/SessionCodeAlreadyExistsError";
+import { SessionIsFullError } from "@/errors/SessionIsFullError";
+import { SessionNotFoundError } from "@/errors/SessionNotFoundError";
+import { UserAlreadyInSessionError } from "@/errors/UserAlreadyInSessionError";
+import { UserNotFoundError } from "@/errors/UserNotFoundError";
+import { SessionService } from "@/services/SessionService";
+import { SessionValidator } from "@/validators/SessionValidator";
+import { UserValidator } from "@/validators/UserValidator";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
 
 export async function createSession(request: FastifyRequest, reply: FastifyReply) {
-  const createSessionBodySchema = z.object({
-    code: z.string().length(6),
-    rounds: z.number()
-  })
-
-  const { code, rounds } = createSessionBodySchema.parse(request.body)
-
-  const userId = request.user.sub
-
   try {
+    const { code, rounds } = new SessionValidator().validateCreateSessionRequest(request)
+
+    const userId = request.user.sub
+
     const sessionService = new SessionService()
 
-    const { session } = await sessionService.create({ code, userId, rounds })
+    const { session } = await sessionService.createSession({ code, userId, rounds })
 
     return reply.status(201).send({ session })
   } catch (err) {
@@ -35,18 +32,14 @@ export async function createSession(request: FastifyRequest, reply: FastifyReply
 }
 
 export async function joinSession(request: FastifyRequest, reply: FastifyReply) {
-  const joinSessionParamsSchema = z.object({
-    code: z.string().length(6)
-  })
-
-  const { code } = joinSessionParamsSchema.parse(request.params)
-
-  const userId = request.user.sub
-
   try {
+    const code = new SessionValidator().validateSessionCodeFormat(request)
+
+    const userId = request.user.sub
+
     const sessionService = new SessionService()
 
-    const { session } = await sessionService.join({ code, userId })
+    const { session } = await sessionService.joinSession({ code, userId })
 
     return reply.status(200).send({ session })
   } catch (err) {
@@ -56,6 +49,10 @@ export async function joinSession(request: FastifyRequest, reply: FastifyReply) 
 
     if (err instanceof UserAlreadyInSessionError || err instanceof SessionIsFullError) {
       return reply.status(409).send({ message: err.message })
+    }
+
+    if (err instanceof InvalidCodeFormatError) {
+      return reply.status(400).send({ message: err.message })
     }
 
     throw err
@@ -71,16 +68,12 @@ export async function listActiveSessions(request: FastifyRequest, reply: Fastify
 }
 
 export async function getSessionByOwnerUsername(request: FastifyRequest, reply: FastifyReply) {
-  const getSessionByOwnerUsernameBodySchema = z.object({
-    username: z.string(),
-  })
-
-  const { username } = getSessionByOwnerUsernameBodySchema.parse(request.body)
-
   try {
+    const username = new UserValidator().validateUsername(request)
+
     const sessionService = new SessionService()
 
-    const session = await sessionService.findByOwnerUsername({ username })
+    const session = await sessionService.findSessionByOwnerUsername({ username })
 
     return reply.status(200).send({ session })
   } catch (err) {
