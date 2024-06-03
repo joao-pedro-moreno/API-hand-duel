@@ -1,4 +1,5 @@
 import { UserDao } from "@/daos/UserDao"
+import { CannotDeleteAccount } from "@/errors/CannotDeleteAccount"
 import { EmailAlreadyExistsError } from "@/errors/EmailAlreadyExistsError"
 import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError"
 import { UserNotFoundError } from "@/errors/UserNotFoundError"
@@ -73,5 +74,13 @@ export class UserService {
     }
 
     return user
+  }
+
+  async deleteUser(userId: string) {
+    const deletedAccount = this.userDao.deleteUser(userId)
+
+    if (!deletedAccount) {
+      throw new CannotDeleteAccount()
+    }
   }
 }

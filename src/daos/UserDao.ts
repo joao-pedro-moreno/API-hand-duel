@@ -24,6 +24,16 @@ export class UserDao {
     return { user }
   }
 
+  async deleteUser(userId: string): Promise<User> {
+    const deletedAccount = await prisma.user.delete({
+      where: {
+        id: userId,
+      }
+    })
+
+    return deletedAccount
+  }
+
   async findUserByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: {
