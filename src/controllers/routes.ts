@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { authenticateUser, deleteUser, getUserProfile, registerUser } from "./UserController";
 import { verifyJWT } from "@/middlewares/VerifyJWT";
 import { createSession, getSessionByOwnerUsername, joinSession, listActiveSessions } from "./SessionController";
+import { SessionSocket } from "./SessionSocketController";
 
 export async function routes(app: FastifyInstance) {
   app.post("/user/register", registerUser)
@@ -13,4 +14,6 @@ export async function routes(app: FastifyInstance) {
   app.post("/sessions/:code/join", { onRequest: [verifyJWT] }, joinSession)
   app.get("/sessions/list/active", listActiveSessions)
   app.post("/sessions/searchByUsername", getSessionByOwnerUsername)
+
+  app.get("/sessions/connectSocket", { websocket: true }, SessionSocket)
 }

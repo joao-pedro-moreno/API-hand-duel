@@ -4,8 +4,11 @@ import { env } from "./env"
 import { routes } from "./controllers/routes"
 import fastifyJwt from "@fastify/jwt"
 import fastifyCookie from "@fastify/cookie"
+import fastifyWebsocket from "@fastify/websocket"
 
 export const app = fastify()
+
+app.register(fastifyWebsocket)
 
 app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
