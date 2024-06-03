@@ -17,7 +17,7 @@ export async function createSession(request: FastifyRequest, reply: FastifyReply
 
     const sessionService = new SessionService()
 
-    const { session } = await sessionService.create({ code, userId, rounds })
+    const { session } = await sessionService.createSession({ code, userId, rounds })
 
     return reply.status(201).send({ session })
   } catch (err) {
@@ -39,7 +39,7 @@ export async function joinSession(request: FastifyRequest, reply: FastifyReply) 
 
     const sessionService = new SessionService()
 
-    const { session } = await sessionService.join({ code, userId })
+    const { session } = await sessionService.joinSession({ code, userId })
 
     return reply.status(200).send({ session })
   } catch (err) {
@@ -73,7 +73,7 @@ export async function getSessionByOwnerUsername(request: FastifyRequest, reply: 
 
     const sessionService = new SessionService()
 
-    const session = await sessionService.findByOwnerUsername({ username })
+    const session = await sessionService.findSessionByOwnerUsername({ username })
 
     return reply.status(200).send({ session })
   } catch (err) {
