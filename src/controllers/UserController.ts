@@ -116,7 +116,9 @@ export async function deleteUser(request: FastifyRequest, reply: FastifyReply) {
   try {
     new UserService().deleteUser(request.user.sub)
 
-    return reply.status(204).send()
+    return reply.status(204)
+      .clearCookie("refreshToken")
+      .send()
   } catch (err) {
     if (err instanceof CannotDeleteAccount) {
       return reply.status(403).send({ message: err.message })
