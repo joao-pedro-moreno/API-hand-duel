@@ -13,7 +13,11 @@ interface SessionInfos {
   player1Socket?: WebSocket
   player2Socket?: WebSocket
   rounds: number
+  player1Choice?: 1 | 2 | 3
+  player2Choice?: 1 | 2 | 3
 }
+
+type ValidChoices = 1 | 2 | 3
 
 const activeSessions: SessionsObject = {}
 
@@ -146,6 +150,26 @@ export async function SessionSocket(socket: WebSocket, request: FastifyRequest) 
     }
 
     if (messageObj.type === "choice") {
+      const currentSession = activeSessions[sessionCode]
+
+      if (!currentSession) {
+        socket.send(JSON.stringify({
+          type: "error",
+          message: "You must be connected in to a session!"
+        }))
+
+        return;
+      }
+
+      if (!currentSession.player1Socket || !currentSession.player2Socket) {
+        socket.send(JSON.stringify({
+          type: "error",
+          message: "Other player disconnected!"
+        }))
+
+        return;
+      }
+
       const choice = messageObj.choice
 
       // Choices:
@@ -163,6 +187,72 @@ export async function SessionSocket(socket: WebSocket, request: FastifyRequest) 
 
         return;
       }
+
+      if (currentSession.player1Id === userId) {
+        currentSession.player1Choice = choice
+      }
+
+      if (currentSession.player2Id === userId) {
+        currentSession.player2Choice = choice
+      }
+
+      if (currentSession.player1Choice && currentSession.player2Choice) {
+        const roundResult = getRoundResult(currentSession.player1Choice, currentSession.player2Choice)
+
+        switch (roundResult) {
+          case "player1":
+            currentSession.player1Socket.send(JSON.stringify({
+              type: "result",
+              message: "Win"
+            }))
+
+            currentSession.player2Socket.send(JSON.stringify({
+              type: "result",
+              message: "Lose"
+            }))
+            break
+          case "player2":
+            currentSession.player2Socket.send(JSON.stringify({
+              type: "result",
+              message: "Win"
+            }))
+
+            currentSession.player1Socket.send(JSON.stringify({
+              type: "result",
+              message: "Lose"
+            }))
+            break
+          default:
+            currentSession.player1Socket.send(JSON.stringify({
+              type: "result",
+              message: "Tie"
+            }))
+
+            currentSession.player2Socket.send(JSON.stringify({
+              type: "result",
+              message: "Tie"
+            }))
+            break
+        }
+
+        currentSession.player1Choice = undefined
+        currentSession.player2Choice = undefined
+      }
     }
   })
+}
+
+function getRoundResult(player1Choice: ValidChoices, player2Choice: ValidChoices): string {
+  if (player1Choice === player2Choice) {
+    return "tie"
+  }
+
+  if ((player1Choice === 1 && player2Choice === 3) ||
+    (player1Choice === 2 && player2Choice === 1) ||
+    (player1Choice === 3 && player2Choice === 2)
+  ) {
+    return "player1"
+  } else {
+    return "player2"
+  }
 }
