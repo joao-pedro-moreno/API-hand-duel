@@ -1,6 +1,7 @@
 import { SessionDao } from "@/daos/SessionDao"
 import { UserDao } from "@/daos/UserDao"
 import { InvalidChoiceError } from "@/errors/InvalidChoiceError"
+import { InvalidUserError } from "@/errors/InvalidUserError"
 import { NotConnectedToSessionError } from "@/errors/NotConnectedToSessionError"
 import { OtherPlayerDisconnectedError } from "@/errors/OtherPlayerDisconnectedError"
 import { SessionIsFullError } from "@/errors/SessionIsFullError"
@@ -14,8 +15,8 @@ interface SessionsObject {
 }
 
 interface SessionInfos {
-  player1Id: string | null
-  player2Id: string | null
+  player1Id?: string | null
+  player2Id?: string | null
   player1Socket?: WebSocket
   player2Socket?: WebSocket
   rounds: number
@@ -164,6 +165,38 @@ export class SessionSocketService {
       return "player1"
     } else {
       return "player2"
+    }
+  }
+
+  async handleRemovePlayerFromSession(sessionCode: string, userId: string) {
+    const session = activeSessions[sessionCode]
+
+    if (!session) {
+      throw new SessionNotFoundError()
+    }
+
+    let finishSession: boolean = false
+
+    if (session.player1Id === userId) {
+      session.player1Id = null
+      session.player1Socket = undefined
+
+      if (!session.player2Socket) {
+        finishSession = true
+      }
+    } else if (session.player2Id === userId) {
+      session.player2Id = null
+      session.player2Socket = undefined
+
+      if (!session.player1Socket) {
+        finishSession = true
+      }
+    } else {
+      throw new InvalidUserError()
+    }
+
+    if (finishSession) {
+      delete activeSessions[sessionCode]
     }
   }
 }
