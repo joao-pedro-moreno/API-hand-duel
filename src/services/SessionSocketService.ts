@@ -1,6 +1,8 @@
 import { SessionDao } from "@/daos/SessionDao"
 import { UserDao } from "@/daos/UserDao"
+import { InvalidChoiceError } from "@/errors/InvalidChoiceError"
 import { NotConnectedToSessionError } from "@/errors/NotConnectedToSessionError"
+import { OtherPlayerDisconnectedError } from "@/errors/OtherPlayerDisconnectedError"
 import { SessionIsFullError } from "@/errors/SessionIsFullError"
 import { SessionNotFoundError } from "@/errors/SessionNotFoundError"
 import { UnauthorizedSessionError } from "@/errors/UnauthorizedSessionError"
@@ -22,6 +24,8 @@ interface SessionInfos {
 }
 
 type ValidChoices = 1 | 2 | 3
+
+type ResultOptions = "player1" | "player2" | "tie"
 
 const activeSessions: SessionsObject = {}
 
@@ -81,13 +85,85 @@ export class SessionSocketService {
     }))
   }
 
-  handlePlayerChoice(sessionCode: string, userid: string, choice: ValidChoices) {
+  handlePlayerChoice(sessionCode: string, userId: string, choice: ValidChoices) {
     const currentSession = activeSessions[sessionCode]
 
     if (!currentSession) {
       throw new NotConnectedToSessionError()
     }
 
-    // const isPlayer
+    const isPlayer1 = currentSession.player1Id === userId
+    const isPlayer2 = currentSession.player2Id === userId
+
+    if (!isPlayer1 && !isPlayer2) {
+      throw new UnauthorizedSessionError()
+    }
+
+    if (!currentSession.player1Socket || !currentSession.player2Socket) {
+      throw new OtherPlayerDisconnectedError()
+    }
+
+    if (!validChoices.includes(choice)) {
+      throw new InvalidChoiceError()
+    }
+
+    if (isPlayer1) {
+      currentSession.player1Choice = choice
+    } else if (isPlayer2) {
+      currentSession.player2Choice = choice
+    }
+
+    if (currentSession.player1Choice && currentSession.player2Choice) {
+      this.resolveRound(currentSession)
+    }
+  }
+
+  private resolveRound(session: SessionInfos) {
+    const roundResult = this.getRoundResult(session.player1Choice!, session.player2Choice!)
+
+    const resultMessages = {
+      player1: {
+        player1: "Win",
+        player2: "Lose"
+      },
+      player2: {
+        player1: "Lose",
+        player2: "Win"
+      },
+      tie: {
+        player1: "Tie",
+        player2: "Tie"
+      }
+    }
+
+    const messages = resultMessages[roundResult]
+
+    session.player1Socket!.send(JSON.stringify({
+      type: "result",
+      message: messages.player1
+    }))
+
+    session.player2Socket!.send(JSON.stringify({
+      type: "result",
+      message: messages.player2
+    }))
+
+    session.player1Choice = undefined
+    session.player2Choice = undefined
+  }
+
+  private getRoundResult(player1Choice: ValidChoices, player2Choice: ValidChoices): ResultOptions {
+    if (player1Choice === player2Choice) {
+      return "tie"
+    }
+
+    if ((player1Choice === 1 && player2Choice === 3) ||
+      (player1Choice === 2 && player2Choice === 1) ||
+      (player1Choice === 3 && player2Choice === 2)
+    ) {
+      return "player1"
+    } else {
+      return "player2"
+    }
   }
 }
