@@ -8,10 +8,9 @@ datasource db {
 }
 
 enum SessionStatus {
-  PLAYER1
-  PLAYER2
-  TIE
-  INTERRUPTED
+  player1
+  player2
+  tie
 }
 
 model User {

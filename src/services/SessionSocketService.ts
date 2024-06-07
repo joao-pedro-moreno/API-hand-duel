@@ -175,28 +175,46 @@ export class SessionSocketService {
       throw new SessionNotFoundError()
     }
 
-    let finishSession: boolean = false
+    let removeSession: boolean = false
 
     if (session.player1Id === userId) {
       session.player1Id = null
       session.player1Socket = undefined
 
       if (!session.player2Socket) {
-        finishSession = true
+        removeSession = true
       }
     } else if (session.player2Id === userId) {
       session.player2Id = null
       session.player2Socket = undefined
 
       if (!session.player1Socket) {
-        finishSession = true
+        removeSession = true
       }
     } else {
       throw new InvalidUserError()
     }
 
-    if (finishSession) {
+    if (removeSession) {
       delete activeSessions[sessionCode]
+
+      await this.sessionDao.deleteActiveSession(sessionCode)
     }
+  }
+
+  async finishSession(sessionCode: string, userId: string, status: ResultOptions) {
+    const session = await this.sessionDao.findSessionByCode(sessionCode)
+
+    if (!session) {
+      throw new SessionNotFoundError()
+    }
+
+    if (session.player1Id !== userId && session.player2Id !== userId) {
+      throw new InvalidUserError()
+    }
+
+    await this.sessionDao.finishSession(session, status)
+
+    await this.sessionDao.deleteActiveSession(sessionCode)
   }
 }

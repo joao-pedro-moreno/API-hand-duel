@@ -11,7 +11,7 @@ interface UserWebSocket extends WebSocket {
   userId: string
 }
 
-export async function SessionSocket(socket: UserWebSocket) {
+export async function SessionSocket(socket: WebSocket) {
   const sessionSocketService = new SessionSocketService()
 
   socket.send(JSON.stringify({
@@ -23,7 +23,7 @@ export async function SessionSocket(socket: UserWebSocket) {
     try {
       const messageObj = JSON.parse(message.toString())
 
-      const { code, userId, type, choice } = messageObj
+      const { code, userId, type, choice, result } = messageObj
 
       if (!code || typeof code !== "string") {
         throw new SessionCodeRequiredError()
@@ -33,8 +33,8 @@ export async function SessionSocket(socket: UserWebSocket) {
         throw new UserIdRequiredError()
       }
 
-      socket.sessionCode = code
-      socket.userId = userId
+      (socket as UserWebSocket).sessionCode = code;
+      (socket as UserWebSocket).userId = userId;
 
       switch (type) {
         case "join":
@@ -42,6 +42,9 @@ export async function SessionSocket(socket: UserWebSocket) {
           break;
         case "choice":
           sessionSocketService.handlePlayerChoice(code, userId, choice)
+          break;
+        case "finish":
+          sessionSocketService.finishSession(code, userId, result)
           break;
         default:
           throw new UnknowMessageTypeError()
@@ -63,6 +66,19 @@ export async function SessionSocket(socket: UserWebSocket) {
 
         socket.close()
       }
+    }
+  })
+
+  socket.on("close", async () => {
+    try {
+      const sessionCode = (socket as UserWebSocket).sessionCode
+      const userId = (socket as UserWebSocket).userId
+
+      if (sessionCode && userId) {
+        sessionSocketService.handleRemovePlayerFromSession(sessionCode, userId)
+      }
+    } catch (error) {
+      console.error("Error handling socket close: ", error)
     }
   })
 }
