@@ -7,6 +7,8 @@ interface Session {
   rounds: number
 }
 
+type SessionStatus = "player1" | "player2" | "tie"
+
 export class SessionDao {
   async createSession({ code, userId, rounds }: Session): Promise<ActiveSession> {
     const session = await prisma.activeSession.create({
@@ -74,5 +76,27 @@ export class SessionDao {
     const sessions = await prisma.activeSession.findMany()
 
     return sessions
+  }
+
+  async deleteActiveSession(code: string) {
+    await prisma.activeSession.delete({
+      where: {
+        code
+      }
+    })
+  }
+
+  async finishSession(session: ActiveSession, status: SessionStatus) {
+    if (session.player1Id && session.player2Id) {
+      await prisma.finishedSession.create({
+        data: {
+          id: session.id,
+          player1Id: session.player1Id,
+          player2Id: session.player2Id,
+          rounds: session.rounds,
+          status,
+        }
+      })
+    }
   }
 }
